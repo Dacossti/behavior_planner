@@ -1,0 +1,6 @@
+openai
+gym
+stable-baselines3
+ai2thor
+pddlpy
+torch
