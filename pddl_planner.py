@@ -1,65 +1,59 @@
 # pddl_planner.py
-# Title: Subgoals → PDDL → Motion Plan
+# Title: File‑Based PDDL Planner
 # ------------------------------------------------
-# Converts subgoals into a PDDL problem and domain, then calls
-# a classical planner (e.g., Fast Downward) or a sampling-based
-# motion planner (e.g., OMPL) to get a sequence of waypoints.
+# Reads a PDDL domain and problem from disk, invokes
+# Fast Downward, and returns a list of grounded actions.
 
 import subprocess
 import tempfile
+from pathlib import Path
 
-PDDL_DOMAIN = """
-(define (domain house)
-  (:predicates (at ?x) (holding ?o) (placed ?o ?r))
-  ;; ... define actions like move, pick, place
-)
-"""
-
-PDDL_TEMPLATE = """
-(define (problem household-job)
-  (:domain house)
-  (:init {init})
-  (:goal (and {goal}))
-)
-"""
-
-def subgoals_to_pddl(subgoals: list):
-    # Build init and goal from subgoals
-    init = "(at LivingRoom)"  # assume start
-    goal_atoms = []
-    for step in subgoals:
-        if step.startswith("GoTo"):
-            room = step[4:]
-            goal_atoms.append(f"(at {room})")
-        elif step.startswith("PickUp"):
-            obj = step[6:]
-            goal_atoms.append(f"(holding {obj})")
-        elif step.startswith("Place"):
-            obj, loc = step[5:].split("On")
-            goal_atoms.append(f"(placed {obj} {loc})")
-    problem = PDDL_TEMPLATE.format(init=init, goal=" ".join(goal_atoms))
-    return PDDL_DOMAIN, problem
+def load_pddl_file(path: Path) -> str:
+    """
+    Read the entire contents of a PDDL file.
+    Raises FileNotFoundError if the file doesn’t exist.
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"PDDL file not found: {path}")
+    return path.read_text()
 
 def run_planner(domain_str: str, problem_str: str) -> list:
-    # Write temporary files
-    with tempfile.NamedTemporaryFile("w", delete=False) as d, \
-         tempfile.NamedTemporaryFile("w", delete=False) as p:
-        d.write(domain_str); p.write(problem_str)
-        d_path, p_path = d.name, p.name
+    """
+    Write domain & problem strings into temporary .pddl files,
+    call Fast Downward, and parse its output plan into a Python list.
+    """
+    # 1) Create two temp files for domain and problem
+    with tempfile.NamedTemporaryFile("w", suffix=".pddl", delete=False) as d, \
+         tempfile.NamedTemporaryFile("w", suffix=".pddl", delete=False) as p:
+        d.write(domain_str)
+        p.write(problem_str)
+        domain_file = d.name
+        problem_file = p.name
 
-    # Call Fast Downward (assumes it's on your PATH)
+    # 2) Invoke the planner (assumes fast‑downward.py is on your PATH)
     result = subprocess.run(
-        ["fast-downward.py", "--plan-file", "plan.txt", d_path, p_path],
-        capture_output=True, text=True
+        ["fast-downward.py", "--plan-file", "plan.txt", domain_file, problem_file],
+        capture_output=True,
+        text=True
     )
     if result.returncode != 0:
-        raise RuntimeError(result.stderr)
-    # Read back the plan as a list of actions
+        raise RuntimeError(f"Planner error:\n{result.stderr}")
+
+    # 3) Read back the plan
     with open("plan.txt") as f:
         actions = [line.strip() for line in f if line.strip()]
     return actions
 
 if __name__ == "__main__":
-    dom, prob = subgoals_to_pddl(["GoToKitchen", "PickUpPlate", "PlacePlateOnTable"])
-    plan = run_planner(dom, prob)
+    # 1. Locate PDDL files (expects a 'domain/' folder next to this script)
+    base = Path(__file__).parent / "domain"
+    domain_path  = base / "domain.pddl"
+    problem_path = base / "problem.pddl"
+
+    # 2. Load their contents
+    domain_str  = load_pddl_file(domain_path)
+    problem_str = load_pddl_file(problem_path)
+
+    # 3. Run the planner and print the resulting action sequence
+    plan = run_planner(domain_str, problem_str)
     print("Plan:", plan)
