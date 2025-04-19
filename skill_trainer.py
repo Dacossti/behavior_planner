@@ -18,7 +18,7 @@ def train_skill(env_name: str, model_path: str, timesteps: int = 100_000):
     model.save(model_path)
     print(f"Saved skill policy to {model_path}")
 
-if name == "__main__":
+if __name__ == "__main__":
     # Example: train navigation skill
     train_skill("KitchenNav-v0", "nav_skill.zip")
     # Then: train pick / place similarly
