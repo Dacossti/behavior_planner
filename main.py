@@ -31,7 +31,7 @@ def execute_plan(actions: list):
             obs, reward, done, info = skill.env.step(action)
         print(f"{act} succeeded.")
 
-if name == "__main__":
+if __name__ == "__main__":
     instr = input("Enter instruction: ")
     subgoals = parse_instruction_to_subgoals(instr)
     domain, problem = subgoals_to_pddl(subgoals)
