@@ -1,22 +1,30 @@
-(define (problem pick-and-place-cup)
-  (:domain house-tasks)
+;; domain/problem.pddl
+;; Title: Set‑the‑Table Task
 
+(define (problem set-the-table)
+  (:domain house)
+
+  ;; Declared objects and locations in this scenario
   (:objects
-    agent1 - agent
-    cup1 - object
-    table counter kitchen doorway - location
+    agent1           - agent
+    Plate1 Cup1      - object
+    LivingRoom       Kitchen DiningRoom Table Counter  - location
   )
 
+  ;; Initial world state
   (:init
-    (at agent1 doorway)
-    (at-object cup1 table)
+    (at agent1 LivingRoom)
+    (at-object Plate1 Table)
+    (at-object Cup1 Table)
     (empty-hand agent1)
   )
 
+  ;; Goal: Agent in DiningRoom & both items placed on the Counter
   (:goal
     (and
-      (at agent1 kitchen)
-      (at-object cup1 counter)
+      (at agent1 DiningRoom)
+      (placed Plate1 Counter)
+      (placed Cup1 Counter)
     )
   )
 )
