@@ -15,12 +15,8 @@ def parse_instruction_to_subgoals(instruction: str) -> list:
     Query the LLM to break an instruction into subgoals.
     Returns a list like ['GoToKitchen', 'PickUpPlate', ...].
     """
-    prompt = f"""
-    You are an assistant that converts household instructions into
-    a step-by-step sequence of subgoals.  
-    Instruction: "{instruction}"
-    Output as a JSON list of steps, e.g. ["GoToKitchen", "PickUpPlate", "PlacePlateOnTable"]:
-    """
+    prompt = f"You are an assistant that converts household instructions into a step-by-step sequence of subgoals. Instruction: '{instruction}' Output as a JSON list of steps, e.g. ['GoToKitchen', 'PickUpPlate', 'PlacePlateOnTable']"
+    
     resp = openai.ChatCompletion.create(
         model="gpt-4-vision-preview",
         messages=[{"role": "system", "content": "You output only a JSON list."},
@@ -28,8 +24,8 @@ def parse_instruction_to_subgoals(instruction: str) -> list:
     )
     # parse JSON from the assistant’s reply
     subgoals = resp.choices[0].message.content.strip()
-    return eval(subgoals)  # for simplicity; you can json.loads instead
+    return json.loads(subgoals)
 
-if name == "__main__":
+if __name__ == "__main__":
     instr = "Set the table for two."
     print(parse_instruction_to_subgoals(instr))

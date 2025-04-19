@@ -59,7 +59,7 @@ def run_planner(domain_str: str, problem_str: str) -> list:
         actions = [line.strip() for line in f if line.strip()]
     return actions
 
-if name == "__main__":
+if __name__ == "__main__":
     dom, prob = subgoals_to_pddl(["GoToKitchen", "PickUpPlate", "PlacePlateOnTable"])
     plan = run_planner(dom, prob)
     print("Plan:", plan)
