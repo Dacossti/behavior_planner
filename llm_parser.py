@@ -4,6 +4,7 @@
 # Uses OpenAI's GPT-4 (or GPT-4 Vision) API to parse natural language instructions into subgoals.
 
 import openai
+import os
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
