@@ -1,6 +1,7 @@
-openai
-gym
-stable-baselines3
-ai2thor
-pddlpy
-torch
+ai2thor==5.0.0
+gym==0.26.2
+stable-baselines3==2.1.0
+numpy==1.24.3
+torch==2.0.0
+pandas==2.0.3
+scikit-learn==1.3.0

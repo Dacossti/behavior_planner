@@ -1,31 +1,45 @@
 # instruction_parser.py
-# Title: Natural Language → Subgoal Sequence
+# Title: LLM-Based Instruction Parser
 # ------------------------------------------------
-# Uses a pretrained LLM (e.g. via OpenAI API) to turn
-# a free‑form instruction into an ordered list of
-# symbolic subgoals.
+# Uses OpenAI's GPT-4 (or GPT-4 Vision) API to parse natural language instructions into subgoals.
 
-import os
-import openai  # pip install openai
+import openai
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def parse_instruction_to_subgoals(instruction: str) -> list:
     """
-    Query the LLM to break an instruction into subgoals.
-    Returns a list like ['GoToKitchen', 'PickUpPlate', ...].
+    Sends a prompt to GPT-4 to convert a natural language instruction
+    into a list of subgoals.
     """
-    prompt = f"You are an assistant that converts household instructions into a step-by-step sequence of subgoals. Instruction: '{instruction}' Output as a JSON list of steps, e.g. ['GoToKitchen', 'PickUpPlate', 'PlacePlateOnTable']"
-    
-    resp = openai.ChatCompletion.create(
-        model="gpt-4-vision-preview",
-        messages=[{"role": "system", "content": "You output only a JSON list."},
-                  {"role": "user", "content": prompt}]
+    prompt = f"""
+    You are an assistant helping a robot in a kitchen environment. 
+    Convert the following instruction into a list of subgoals.
+    Example:
+    Instruction: "Pick up the cup and place it on the table"
+    Subgoals:
+    - GoToCupboard
+    - PickUpCup
+    - GoToTable
+    - PlaceCupOnTable
+
+    Now do the same for:
+    Instruction: "{instruction}"
+    Subgoals:
+    """
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
     )
-    # parse JSON from the assistant’s reply
-    subgoals = resp.choices[0].message.content.strip()
-    return json.loads(subgoals)
+
+    subgoals_text = response['choices'][0]['message']['content']
+    subgoals = [line.strip("- ").strip() for line in subgoals_text.strip().split("\n") if line.strip()]
+
+    return subgoals
 
 if __name__ == "__main__":
-    instr = "Set the table for two."
-    print(parse_instruction_to_subgoals(instr))
+    instr = input("Enter instruction: ")
+    subgoals = parse_instruction_to_subgoals(instr)
+    print("Subgoals:", subgoals)
