@@ -10,7 +10,7 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def parse_instruction_to_subgoals(instruction: str) -> list:
     """
-    Sends a prompt to GPT-4 to convert a natural language instruction
+    Sends a prompt to GPT-3.5 to convert a natural language instruction
     into a list of subgoals.
     """
     prompt = f"""
@@ -30,7 +30,7 @@ def parse_instruction_to_subgoals(instruction: str) -> list:
     """
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
